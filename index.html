@@ -78,6 +78,7 @@
   .hero p.sub {
     margin-top: 26px; font-size: 17px; color: var(--ink-secondary); max-width: 46ch;
   }
+  .hero p.sub strong { color: var(--ink-primary); font-weight: 600; }
   .hero .scroll-cue {
     margin-top: 64px; display: flex; flex-direction: column; align-items: center; gap: 8px;
     color: var(--ink-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
@@ -127,7 +128,11 @@
   }
   .step .kicker {
     font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--teal); font-weight: 600;
-    margin-bottom: 14px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .step .kicker .bonus-tag {
+    background: rgba(242,123,182,0.16); color: var(--pink); border: 1px solid rgba(242,123,182,0.35);
+    border-radius: 999px; padding: 2px 9px; font-size: 10.5px; letter-spacing: 0.06em;
   }
   .step h2 {
     font-size: clamp(24px, 3.4vw, 36px); font-weight: 800; color: var(--ink-primary); letter-spacing: -0.01em;
@@ -137,12 +142,21 @@
   }
   .step p.body strong { color: var(--ink-primary); font-weight: 600; }
   .step .big-stat {
-    margin-top: 22px; display: inline-flex; align-items: baseline; gap: 10px;
+    margin-top: 22px; display: flex; align-items: baseline; gap: 12px;
     font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 44px; color: var(--teal);
   }
-  .step .big-stat .unit { font-size: 16px; color: var(--ink-muted); font-weight: 500; }
+  .step .big-stat .unit { font-size: 14.5px; color: var(--ink-muted); font-weight: 500; max-width: 30ch; line-height: 1.4; }
   .step.dim { opacity: 0.45; transition: opacity 0.4s ease; }
   .step.in-view { opacity: 1; }
+  .step.bonus h2 { font-size: clamp(21px, 2.8vw, 28px); }
+  .bonus-list { margin: 18px 0 0; padding: 0; list-style: none; max-width: 54ch; }
+  .bonus-list li {
+    display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border);
+    font-size: 15px; color: var(--ink-secondary); line-height: 1.5;
+  }
+  .bonus-list li:first-child { border-top: none; }
+  .bonus-list li strong { color: var(--ink-primary); font-weight: 600; }
+  .bonus-list .icon { flex: none; color: var(--pink); font-size: 15px; }
 
   .mobile-chart { display: none; margin-top: 24px; }
 
@@ -167,14 +181,14 @@
   }
   .closer .eyebrow { color: #b8447f; font-size: 12.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; }
   .closer h2 { font-size: clamp(28px, 4.5vw, 46px); font-weight: 800; max-width: 20ch; margin: 0 auto; letter-spacing: -0.015em; }
-  .closer .lede { margin: 22px auto 0; max-width: 56ch; font-size: 16.5px; color: var(--paper-muted); }
+  .closer .lede { margin: 22px auto 0; max-width: 58ch; font-size: 16.5px; color: var(--paper-muted); }
   .closer .verdict-cards { display: flex; gap: 20px; justify-content: center; margin-top: 48px; flex-wrap: wrap; }
   .closer .vcard {
     background: #ffffff; border: 1px solid rgba(32,19,34,0.10); border-radius: 16px; padding: 26px;
-    width: 260px; text-align: left; box-shadow: 0 8px 24px -14px rgba(32,19,34,0.18);
+    width: 280px; text-align: left; box-shadow: 0 8px 24px -14px rgba(32,19,34,0.18);
   }
   .closer .vcard .vlabel { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #b8447f; }
-  .closer .vcard p { font-size: 14px; color: var(--paper-muted); margin: 10px 0 0; line-height: 1.55; }
+  .closer .vcard p { font-size: 14.5px; color: var(--paper-muted); margin: 10px 0 0; line-height: 1.55; }
   .closer .vcard p strong { color: var(--paper-ink); }
   .closer footer { margin-top: 64px; font-size: 12.5px; color: var(--paper-muted); }
   .closer footer a { color: #b8447f; }
@@ -195,8 +209,8 @@
 <section class="hero">
   <div class="eyebrow">Organic shares · repeat-post analysis</div>
   <h1>Does spreading content wear it out?</h1>
-  <p class="sub">Brands push the same post to one retailer, sometimes to hundreds. We pulled a year of Facebook
-    and Instagram shares to find out what actually happens as it spreads.</p>
+  <p class="sub"><strong>Short answer: not really — but something else does.</strong> We pulled a year of
+    Facebook and Instagram shares to find out what actually happens as a post spreads.</p>
   <div class="stat-row">
     <div class="item"><div class="num">1.6M</div><div class="lbl">shares analyzed</div></div>
     <div class="item"><div class="num">47K</div><div class="lbl">pieces of content</div></div>
@@ -213,70 +227,53 @@
   <div class="steps-col">
 
     <div class="step" data-step="0">
-      <div class="kicker">01 — THE OBVIOUS READ</div>
-      <h2>The more retailers post it, the worse it does.</h2>
-      <p class="body">Rank every retailer who shares the same piece of content by when they posted it, then
-        average engagement at each rank. The line drops fast — by the <strong>21st+ retailer</strong>, engagement
-        is down <strong>45–65%</strong> from the first post. Instagram falls even harder than Facebook.</p>
+      <div class="kicker">AT FIRST GLANCE</div>
+      <h2>The more retailers who share something, the worse it seems to perform.</h2>
+      <p class="body">Every time a retailer posts a piece of content, we can count how many other retailers
+        already posted that same thing. Line up every post by that count and average how well each group does —
+        the line drops fast. By the time a post has been shared by its <strong>21st+ retailer</strong>, it's
+        down <strong>45–65%</strong> from the very first share.</p>
       <div class="mobile-chart" id="mchart-0"></div>
     </div>
 
     <div class="step" data-step="1">
-      <div class="kicker">02 — BUT CHECK ONE PIECE OF CONTENT AT A TIME</div>
-      <h2>Run the same test per piece of content. The line disappears.</h2>
-      <p class="body">Instead of pooling everything, take <strong>one specific</strong> share setting and check
-        whether its own engagement trends down as more retailers post it. Do that for every piece of content
-        with 5+ posts, and the result is close to a coin flip.</p>
-      <div class="big-stat">~50<span class="unit">% decline · % improve, split evenly</span></div>
+      <div class="kicker">BUT HERE'S THE CATCH</div>
+      <h2>Follow one piece of content at a time, and the decline disappears.</h2>
+      <p class="body">That first chart mixes thousands of different posts together. Some are one-off campaigns
+        that only ever reach a couple of retailers — often high performers. Others are old, always-available
+        content that gets reused by hundreds of retailers over months — and it's popular precisely
+        <em>because</em> it's safe and generic, not because it was ever a top performer. When you instead follow
+        <strong>one single piece of content</strong> and ask "does its own engagement drop as more retailers pick
+        it up," the answer is close to a coin flip.</p>
+      <div class="big-stat">50/50<span class="unit">of individual posts get better vs. worse as more retailers share them</span></div>
       <div class="mobile-chart" id="mchart-1"></div>
     </div>
 
     <div class="step" data-step="2">
-      <div class="kicker">03 — WHY THE POOLED LINE STILL DROPS</div>
-      <h2>It's not decay. It's a change in who's left in the room.</h2>
-      <p class="body">Every piece of content has a "1st retailer," so that bucket includes everything —
-        including high-performing one-off campaigns. Only content popular enough to reach <strong>21+
-        retailers</strong> shows up that far out, and that's disproportionately generic, always-on auto-share
-        material that was lower-engagement <strong>from day one</strong>.</p>
+      <div class="kicker">SO WHAT ACTUALLY CAUSES FATIGUE?</div>
+      <h2>The same retailer posting the exact same thing, over and over.</h2>
+      <p class="body">Track one retailer re-sharing identical content. Their 2nd time posting it does just as
+        well as their 1st — on Instagram, even a little better. It's not until the <strong>4th time</strong>
+        posting the same content that performance really drops: 30–65% below their first try, on both channels.
+        That's the one place fatigue is real.</p>
+      <div class="big-stat">4th+<span class="unit">repost of identical content by the same retailer is where performance actually drops</span></div>
       <div class="mobile-chart" id="mchart-2"></div>
     </div>
 
-    <div class="step" data-step="3">
-      <div class="kicker">04 — MANUAL VS. AUTO-SHARE</div>
-      <h2>Manual posting holds up much better.</h2>
-      <p class="body">Split by share mode and the gap is stark: <strong>manual</strong> posts keep meaningfully
-        higher engagement across every retailer-order bucket than <strong>auto-share</strong> — evidence the
-        composition effect, not fatigue, is doing the work.</p>
+    <div class="step bonus" data-step="3">
+      <div class="kicker">A FEW MORE PATTERNS <span class="bonus-tag">BONUS</span></div>
+      <h2>Three smaller things worth knowing.</h2>
+      <ul class="bonus-list">
+        <li><span class="icon">＋</span><span><strong>Manual beats auto-share.</strong> Posts shared by hand hold
+          up noticeably better than auto-shared ones as they spread — the same story as above: it's what's being
+          posted, not the act of sharing it, that matters.</span></li>
+        <li><span class="icon">＋</span><span><strong>Time doesn't wear it out either.</strong> Performance stays
+          flat for about a month, then ticks back up. Content still being shared a month later is the content
+          that was working.</span></li>
+        <li><span class="icon">＋</span><span><strong>The channels want different things.</strong> Facebook does
+          slightly better with photos; Instagram does much better with video — more than double the reach.</span></li>
+      </ul>
       <div class="mobile-chart" id="mchart-3"></div>
-    </div>
-
-    <div class="step" data-step="4">
-      <div class="kicker">05 — WHAT ABOUT CALENDAR TIME?</div>
-      <h2>Flat for a month, then it ticks <em>up</em>.</h2>
-      <p class="body">Bucket by days since a piece of content's first-ever post instead of retailer count.
-        Engagement stays roughly flat through day 30 on both modes, then rises in the <strong>31+ day</strong>
-        bucket — the opposite of decay. Content still running a month later is the content that was working.</p>
-      <div class="mobile-chart" id="mchart-4"></div>
-    </div>
-
-    <div class="step" data-step="5">
-      <div class="kicker">06 — THE ONE REAL FATIGUE SIGNAL</div>
-      <h2>A retailer's <em>own</em> 4th repost is where it actually breaks.</h2>
-      <p class="body">A retailer's 2nd post of identical content performs about the same as their 1st —
-        on Instagram, even better. The real drop is at the <strong>4th+ post</strong> of the same content:
-        30–65% below their first try, on both channels.</p>
-      <div class="big-stat">4<span class="unit">th+ own repost = the actual fatigue point</span></div>
-      <div class="mobile-chart" id="mchart-5"></div>
-    </div>
-
-    <div class="step" data-step="6">
-      <div class="kicker">07 — FORMAT, INDUSTRY, REACH</div>
-      <h2>The channels want opposite things.</h2>
-      <p class="body"><strong>Facebook</strong> does slightly better with photo. <strong>Instagram</strong> does
-        much better with video — over 2x the impressions. Automotive content reaches the widest network (107
-        retailers/setting on average); Luxury Jewelry, Watches and Tactical brands post the highest engagement,
-        led by one standout: Smith &amp; Wesson, at 9.7 avg. engagement per setting.</p>
-      <div class="mobile-chart" id="mchart-6"></div>
     </div>
 
   </div>
@@ -291,27 +288,23 @@
 <!-- CLOSER -->
 <section class="closer">
   <div class="eyebrow">The takeaway</div>
-  <h2>Spreading content doesn't wear it out. Reposting the same thing does.</h2>
-  <p class="lede">Read the pooled decline and the per-content test together — one tells you what's in the room,
-    the other tells you whether any single piece of content is actually losing steam. It isn't. The real signal
-    worth acting on is much narrower: a retailer's 4th+ repost of identical content.</p>
+  <h2>Spreading content doesn't wear it out. Reposting the exact same thing does.</h2>
+  <p class="lede">The decline in that first chart isn't fatigue — it's an illusion caused by averaging very
+    different kinds of content together. No individual post actually wears out as more retailers share it. The
+    one pattern worth acting on is much narrower: a retailer posting identical content a 4th time or more.</p>
   <div class="verdict-cards">
     <div class="vcard">
       <div class="vlabel">Don't</div>
-      <p>Read the retailer-order decline chart alone and conclude wider distribution degrades content.</p>
+      <p>Look at a chart like the first one and conclude that spreading content to more retailers makes it
+        perform worse.</p>
     </div>
     <div class="vcard">
       <div class="vlabel">Do</div>
-      <p>Flag <strong>4th+ identical reposts</strong> by the same retailer as the one real fatigue signal worth
-        surfacing.</p>
-    </div>
-    <div class="vcard">
-      <div class="vlabel">Match format to channel</div>
-      <p><strong>Video on Instagram</strong>, <strong>photo on Facebook</strong> — the two channels reward
-        opposite formats.</p>
+      <p>Watch for a retailer reposting <strong>identical content a 4th+ time</strong> — that's the one real
+        fatigue signal worth flagging.</p>
     </div>
   </div>
-  <footer>Facebook + Instagram organic shares · Aug 19, 2025 – Aug 19, 2026 · Promoboxx internal analysis</footer>
+  <footer>Facebook + Instagram organic shares · Aug 19, 2025 – Aug 19, 2026 · </footer>
 </section>
 
 <script>
@@ -415,32 +408,24 @@
     }).join("");
   }
 
-  // ===== Step / frame definitions =====
+  // ===== Step / frame definitions (4 steps: illusion → reveal → real signal → bonus) =====
   var buckets1 = ["1st", "2nd", "3rd", "4th", "5th", "6-10", "11-20", "21+"];
   var fbEng1 = [2.19, 1.77, 1.56, 1.63, 1.72, 1.73, 1.69, 1.17];
   var igEng1 = [3.82, 2.88, 3.49, 2.08, 2.35, 2.48, 1.55, 1.15];
 
-  var declineCats = ["Facebook", "Instagram"];
-  var declinePct = [50.0, 48.9];
-
-  var modeAvgManual = [3.58, 3.23, 3.24, 2.64, 3.16, 5.36, 3.64, 2.32];
-  var modeAvgAuto = [2.10, 1.93, 2.35, 1.70, 1.86, 1.77, 1.48, 1.11];
-
-  var decayBuckets = ["0d", "1-3d", "4-7d", "8-14d", "15-30d", "31d+"];
-  var decayManual = [3.77, 3.01, 2.81, 3.16, 3.15, 3.95];
-  var decayAuto = [1.30, 1.45, 1.27, 1.39, 1.27, 2.20];
+  var coinFlipCats = ["Gets worse", "Gets better"];
+  var coinFlipVals = [50, 50];
 
   var repeatBuckets = ["1st", "2nd", "3rd", "4th+"];
   var fbEng5 = [1.08, 1.16, 0.94, 0.63];
   var igEng5 = [1.71, 1.82, 1.28, 0.61];
 
-  var formatCats = ["Photo", "Video"];
-  var fbEng6 = [1.39, 1.15];
-  var igEng6 = [1.56, 2.65];
+  var modeAvgManual = [3.58, 3.23, 3.24, 2.64, 3.16, 5.36, 3.64, 2.32];
+  var modeAvgAuto = [2.10, 1.93, 2.35, 1.70, 1.86, 1.77, 1.48, 1.11];
 
   var frames = [
     {
-      kicker: "01 · Retailer order",
+      kicker: "At first glance",
       title: "Avg. engagement, pooled across all content",
       legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
       draw: function (id) {
@@ -451,51 +436,18 @@
       }
     },
     {
-      kicker: "02 · Per-content decline test",
-      title: "% of content with a declining slope",
-      legend: [],
+      kicker: "One post at a time",
+      title: "Does a single post's own engagement decline?",
+      legend: [{ label: "Gets worse / better", color: TEAL }],
       draw: function (id) {
-        drawBar(id, { categories: declineCats, yMax: 100, ticks: 4,
-          series: [{ label: "% declining", color: TEAL, values: declinePct }],
+        drawBar(id, { categories: coinFlipCats, yMax: 100, ticks: 4,
+          series: [{ label: "Share of content", color: TEAL, values: coinFlipVals }],
           yFormat: function (v) { return fmt(v, 0) + "%"; }
         });
       }
     },
     {
-      kicker: "03 · Same test, restated",
-      title: "% of content with a declining slope",
-      legend: [],
-      draw: function (id) {
-        drawBar(id, { categories: declineCats, yMax: 100, ticks: 4,
-          series: [{ label: "% declining", color: TEAL, values: declinePct }],
-          yFormat: function (v) { return fmt(v, 0) + "%"; }
-        });
-      }
-    },
-    {
-      kicker: "04 · Manual vs. auto-share",
-      title: "Avg. engagement by retailer order",
-      legend: [{ label: "Manual", color: TEAL }, { label: "Auto-share", color: PINK }],
-      draw: function (id) {
-        drawLine(id, { categories: buckets1, series: [
-          { label: "Manual", color: TEAL, values: modeAvgManual },
-          { label: "Auto-share", color: PINK, values: modeAvgAuto }
-        ]});
-      }
-    },
-    {
-      kicker: "05 · Time-based decay",
-      title: "Avg. engagement by days since first post",
-      legend: [{ label: "Manual", color: TEAL }, { label: "Auto-share", color: PINK }],
-      draw: function (id) {
-        drawLine(id, { categories: decayBuckets, series: [
-          { label: "Manual", color: TEAL, values: decayManual },
-          { label: "Auto-share", color: PINK, values: decayAuto }
-        ]});
-      }
-    },
-    {
-      kicker: "06 · Same-retailer repeats",
+      kicker: "The real signal",
       title: "Avg. engagement by own repost number",
       legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
       draw: function (id) {
@@ -506,13 +458,13 @@
       }
     },
     {
-      kicker: "07 · Content format",
-      title: "Avg. engagement, photo vs. video",
-      legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
+      kicker: "Bonus: manual vs. auto-share",
+      title: "Avg. engagement by retailer order",
+      legend: [{ label: "Manual", color: TEAL }, { label: "Auto-share", color: PINK }],
       draw: function (id) {
-        drawBar(id, { categories: formatCats, series: [
-          { label: "Facebook", color: TEAL, values: fbEng6 },
-          { label: "Instagram", color: PINK, values: igEng6 }
+        drawLine(id, { categories: buckets1, series: [
+          { label: "Manual", color: TEAL, values: modeAvgManual },
+          { label: "Auto-share", color: PINK, values: modeAvgAuto }
         ]});
       }
     }
@@ -602,21 +554,7 @@
   }, { threshold: 0.15 });
   closerIO.observe(document.querySelector(".closer"));
 
-  // Count-up animation for hero + big-stat numbers
-  function countUp(el, target, suffix, duration) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.textContent = target + suffix; return;
-    }
-    var start = null;
-    function step(ts) {
-      if (!start) start = ts;
-      var progress = Math.min((ts - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(target * eased) + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
+  // Count-up animation for hero stats
   var statNums = document.querySelectorAll(".stat-row .num");
   var heroTargets = [
     { text: "1.6M", val: 1.6, suffix: "M" },

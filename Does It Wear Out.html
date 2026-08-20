@@ -1,0 +1,653 @@
+<meta charset="UTF-8">
+<title>Does It Wear Out?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    color-scheme: dark;
+    --plum: #2c1130;
+    --plum-deep: #1c0a20;
+    --plum-card: #3a1a40;
+    --ink-primary: #faf7fb;
+    --ink-secondary: #d8c3dc;
+    --ink-muted: #9a7fa3;
+    --teal: #22d3e0;
+    --pink: #f27bb6;
+    --border: rgba(250,247,251,0.10);
+    --grid: rgba(250,247,251,0.08);
+    --baseline: rgba(250,247,251,0.22);
+    --paper: #f7f4f2;
+    --paper-ink: #201322;
+    --paper-muted: #6b5a6f;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+  body {
+    margin: 0;
+    background: var(--plum);
+    color: var(--ink-primary);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+  h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; text-wrap: balance; margin: 0; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Progress rail ---------- */
+  #progress-rail {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--teal), var(--pink));
+    z-index: 90; transition: width 0.1s linear, opacity 0.4s ease;
+  }
+  #dot-rail {
+    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 10px; z-index: 80;
+    opacity: 1; transition: opacity 0.4s ease;
+  }
+  #dot-rail.hidden, #progress-rail.hidden { opacity: 0; }
+  #dot-rail .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--border);
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+  #dot-rail .dot.active { background: var(--teal); transform: scale(1.5); }
+  @media (max-width: 900px) { #dot-rail { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px 24px; position: relative;
+    background: radial-gradient(ellipse 120% 80% at 50% 0%, var(--plum-card) 0%, var(--plum) 55%);
+  }
+  .hero .eyebrow {
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 22px;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 7vw, 84px); font-weight: 900; letter-spacing: -0.02em;
+    max-width: 16ch; line-height: 1.04;
+    background: linear-gradient(120deg, #ffffff 30%, var(--teal) 75%, var(--pink) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.sub {
+    margin-top: 26px; font-size: 17px; color: var(--ink-secondary); max-width: 46ch;
+  }
+  .hero .scroll-cue {
+    margin-top: 64px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--ink-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    animation: bob 2s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+  .scroll-cue svg { width: 18px; height: 18px; }
+
+  .stat-row { display: flex; gap: 40px; margin-top: 48px; flex-wrap: wrap; justify-content: center; }
+  .stat-row .item { text-align: center; }
+  .stat-row .num { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 30px; color: var(--ink-primary); }
+  .stat-row .lbl { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+
+  /* ---------- Scrolly layout ---------- */
+  .scrolly {
+    display: flex; max-width: 1400px; margin: 0 auto; position: relative;
+  }
+  .steps-col { flex: 0 1 54%; min-width: 0; padding: 0 5vw; }
+  .sticky-col { flex: 1 1 46%; min-width: 0; position: relative; }
+  .sticky-inner {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .frame-stack { position: relative; width: 100%; max-width: 480px; aspect-ratio: 4 / 3.6; }
+  .frame {
+    position: absolute; inset: 0;
+    background: var(--plum-card); border: 1px solid var(--border); border-radius: 18px;
+    padding: 26px 26px 20px; display: flex; flex-direction: column;
+    opacity: 0; transform: translateY(14px) scale(0.98); pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+  }
+  .frame.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .frame .frame-kicker {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 6px;
+  }
+  .frame .frame-title { font-size: 15.5px; font-weight: 600; color: var(--ink-primary); margin-bottom: 14px; }
+  .frame .frame-chart { flex: 1; min-height: 0; }
+  .frame .frame-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--ink-secondary); }
+  .frame .frame-legend .sw { display: inline-flex; align-items: center; gap: 6px; }
+  .frame .frame-legend .sw .dot { width: 9px; height: 9px; border-radius: 3px; }
+
+  .step {
+    min-height: 92vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 60px 0;
+  }
+  .step .kicker {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--teal); font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .step h2 {
+    font-size: clamp(24px, 3.4vw, 36px); font-weight: 800; color: var(--ink-primary); letter-spacing: -0.01em;
+  }
+  .step p.body {
+    margin-top: 18px; font-size: 16.5px; color: var(--ink-secondary); max-width: 52ch;
+  }
+  .step p.body strong { color: var(--ink-primary); font-weight: 600; }
+  .step .big-stat {
+    margin-top: 22px; display: inline-flex; align-items: baseline; gap: 10px;
+    font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 44px; color: var(--teal);
+  }
+  .step .big-stat .unit { font-size: 16px; color: var(--ink-muted); font-weight: 500; }
+  .step.dim { opacity: 0.45; transition: opacity 0.4s ease; }
+  .step.in-view { opacity: 1; }
+
+  .mobile-chart { display: none; margin-top: 24px; }
+
+  @media (max-width: 900px) {
+    .sticky-col { display: none; }
+    .steps-col { flex: 1 1 100%; padding: 0 6vw; }
+    .mobile-chart {
+      display: block; background: var(--plum-card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; max-width: 440px;
+    }
+    .mobile-chart .frame-kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+    .mobile-chart .frame-title { font-size: 14.5px; font-weight: 600; color: var(--ink-primary); margin-bottom: 12px; }
+    .mobile-chart .frame-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--ink-secondary); }
+    .mobile-chart .frame-legend .sw { display: inline-flex; align-items: center; gap: 6px; }
+    .mobile-chart .frame-legend .sw .dot { width: 9px; height: 9px; border-radius: 3px; }
+  }
+
+  /* ---------- Closer (light interlude) ---------- */
+  .closer {
+    background: var(--paper); color: var(--paper-ink);
+    padding: 120px 24px 100px; text-align: center;
+  }
+  .closer .eyebrow { color: #b8447f; font-size: 12.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; }
+  .closer h2 { font-size: clamp(28px, 4.5vw, 46px); font-weight: 800; max-width: 20ch; margin: 0 auto; letter-spacing: -0.015em; }
+  .closer .lede { margin: 22px auto 0; max-width: 56ch; font-size: 16.5px; color: var(--paper-muted); }
+  .closer .verdict-cards { display: flex; gap: 20px; justify-content: center; margin-top: 48px; flex-wrap: wrap; }
+  .closer .vcard {
+    background: #ffffff; border: 1px solid rgba(32,19,34,0.10); border-radius: 16px; padding: 26px;
+    width: 260px; text-align: left; box-shadow: 0 8px 24px -14px rgba(32,19,34,0.18);
+  }
+  .closer .vcard .vlabel { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #b8447f; }
+  .closer .vcard p { font-size: 14px; color: var(--paper-muted); margin: 10px 0 0; line-height: 1.55; }
+  .closer .vcard p strong { color: var(--paper-ink); }
+  .closer footer { margin-top: 64px; font-size: 12.5px; color: var(--paper-muted); }
+  .closer footer a { color: #b8447f; }
+
+  svg.chart { width: 100%; height: 100%; display: block; overflow: visible; }
+  svg.chart text { font-family: "IBM Plex Sans", sans-serif; fill: var(--ink-muted); font-size: 10px; }
+  svg.chart .axis-line { stroke: var(--baseline); stroke-width: 1; }
+  svg.chart .grid-line { stroke: var(--grid); stroke-width: 1; }
+  svg.chart .bar { transition: opacity 0.2s ease; }
+  svg.chart .line-path { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  svg.chart .dot-mark { stroke: var(--plum-card); stroke-width: 2; }
+</style>
+
+<div id="progress-rail"></div>
+<div id="dot-rail"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="eyebrow">Organic shares · repeat-post analysis</div>
+  <h1>Does spreading content wear it out?</h1>
+  <p class="sub">Brands push the same post to one retailer, sometimes to hundreds. We pulled a year of Facebook
+    and Instagram shares to find out what actually happens as it spreads.</p>
+  <div class="stat-row">
+    <div class="item"><div class="num">1.6M</div><div class="lbl">shares analyzed</div></div>
+    <div class="item"><div class="num">47K</div><div class="lbl">pieces of content</div></div>
+    <div class="item"><div class="num">12</div><div class="lbl">months of data</div></div>
+  </div>
+  <div class="scroll-cue">
+    Scroll
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m0 0l-6-6m6 6l6-6"/></svg>
+  </div>
+</section>
+
+<!-- SCROLLY -->
+<div class="scrolly">
+  <div class="steps-col">
+
+    <div class="step" data-step="0">
+      <div class="kicker">01 — THE OBVIOUS READ</div>
+      <h2>The more retailers post it, the worse it does.</h2>
+      <p class="body">Rank every retailer who shares the same piece of content by when they posted it, then
+        average engagement at each rank. The line drops fast — by the <strong>21st+ retailer</strong>, engagement
+        is down <strong>45–65%</strong> from the first post. Instagram falls even harder than Facebook.</p>
+      <div class="mobile-chart" id="mchart-0"></div>
+    </div>
+
+    <div class="step" data-step="1">
+      <div class="kicker">02 — BUT CHECK ONE PIECE OF CONTENT AT A TIME</div>
+      <h2>Run the same test per piece of content. The line disappears.</h2>
+      <p class="body">Instead of pooling everything, take <strong>one specific</strong> share setting and check
+        whether its own engagement trends down as more retailers post it. Do that for every piece of content
+        with 5+ posts, and the result is close to a coin flip.</p>
+      <div class="big-stat">~50<span class="unit">% decline · % improve, split evenly</span></div>
+      <div class="mobile-chart" id="mchart-1"></div>
+    </div>
+
+    <div class="step" data-step="2">
+      <div class="kicker">03 — WHY THE POOLED LINE STILL DROPS</div>
+      <h2>It's not decay. It's a change in who's left in the room.</h2>
+      <p class="body">Every piece of content has a "1st retailer," so that bucket includes everything —
+        including high-performing one-off campaigns. Only content popular enough to reach <strong>21+
+        retailers</strong> shows up that far out, and that's disproportionately generic, always-on auto-share
+        material that was lower-engagement <strong>from day one</strong>.</p>
+      <div class="mobile-chart" id="mchart-2"></div>
+    </div>
+
+    <div class="step" data-step="3">
+      <div class="kicker">04 — MANUAL VS. AUTO-SHARE</div>
+      <h2>Manual posting holds up much better.</h2>
+      <p class="body">Split by share mode and the gap is stark: <strong>manual</strong> posts keep meaningfully
+        higher engagement across every retailer-order bucket than <strong>auto-share</strong> — evidence the
+        composition effect, not fatigue, is doing the work.</p>
+      <div class="mobile-chart" id="mchart-3"></div>
+    </div>
+
+    <div class="step" data-step="4">
+      <div class="kicker">05 — WHAT ABOUT CALENDAR TIME?</div>
+      <h2>Flat for a month, then it ticks <em>up</em>.</h2>
+      <p class="body">Bucket by days since a piece of content's first-ever post instead of retailer count.
+        Engagement stays roughly flat through day 30 on both modes, then rises in the <strong>31+ day</strong>
+        bucket — the opposite of decay. Content still running a month later is the content that was working.</p>
+      <div class="mobile-chart" id="mchart-4"></div>
+    </div>
+
+    <div class="step" data-step="5">
+      <div class="kicker">06 — THE ONE REAL FATIGUE SIGNAL</div>
+      <h2>A retailer's <em>own</em> 4th repost is where it actually breaks.</h2>
+      <p class="body">A retailer's 2nd post of identical content performs about the same as their 1st —
+        on Instagram, even better. The real drop is at the <strong>4th+ post</strong> of the same content:
+        30–65% below their first try, on both channels.</p>
+      <div class="big-stat">4<span class="unit">th+ own repost = the actual fatigue point</span></div>
+      <div class="mobile-chart" id="mchart-5"></div>
+    </div>
+
+    <div class="step" data-step="6">
+      <div class="kicker">07 — FORMAT, INDUSTRY, REACH</div>
+      <h2>The channels want opposite things.</h2>
+      <p class="body"><strong>Facebook</strong> does slightly better with photo. <strong>Instagram</strong> does
+        much better with video — over 2x the impressions. Automotive content reaches the widest network (107
+        retailers/setting on average); Luxury Jewelry, Watches and Tactical brands post the highest engagement,
+        led by one standout: Smith &amp; Wesson, at 9.7 avg. engagement per setting.</p>
+      <div class="mobile-chart" id="mchart-6"></div>
+    </div>
+
+  </div>
+
+  <div class="sticky-col">
+    <div class="sticky-inner">
+      <div class="frame-stack" id="frame-stack"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSER -->
+<section class="closer">
+  <div class="eyebrow">The takeaway</div>
+  <h2>Spreading content doesn't wear it out. Reposting the same thing does.</h2>
+  <p class="lede">Read the pooled decline and the per-content test together — one tells you what's in the room,
+    the other tells you whether any single piece of content is actually losing steam. It isn't. The real signal
+    worth acting on is much narrower: a retailer's 4th+ repost of identical content.</p>
+  <div class="verdict-cards">
+    <div class="vcard">
+      <div class="vlabel">Don't</div>
+      <p>Read the retailer-order decline chart alone and conclude wider distribution degrades content.</p>
+    </div>
+    <div class="vcard">
+      <div class="vlabel">Do</div>
+      <p>Flag <strong>4th+ identical reposts</strong> by the same retailer as the one real fatigue signal worth
+        surfacing.</p>
+    </div>
+    <div class="vcard">
+      <div class="vlabel">Match format to channel</div>
+      <p><strong>Video on Instagram</strong>, <strong>photo on Facebook</strong> — the two channels reward
+        opposite formats.</p>
+    </div>
+  </div>
+  <footer>Facebook + Instagram organic shares · Aug 19, 2025 – Aug 19, 2026 · Promoboxx internal analysis</footer>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  var TEAL = "#22d3e0", PINK = "#f27bb6";
+
+  function NS(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function fmt(n, d) { return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var norm = v / mag, step;
+    if (norm <= 1) step = 1; else if (norm <= 2) step = 2; else if (norm <= 2.5) step = 2.5;
+    else if (norm <= 5) step = 5; else step = 10;
+    return step * mag;
+  }
+
+  function drawBar(containerId, opts) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    var W = 380, H = 210;
+    var margin = { top: 8, right: 8, bottom: 26, left: 32 };
+    var innerW = W - margin.left - margin.right, innerH = H - margin.top - margin.bottom;
+    var categories = opts.categories, series = opts.series;
+    var maxVal = 0;
+    series.forEach(function (s) { s.values.forEach(function (v) { if (v > maxVal) maxVal = v; }); });
+    var yMax = opts.yMax || niceMax(maxVal * 1.15);
+    var svg = NS("svg", { class: "chart", width: W, height: H, viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "xMidYMid meet" });
+    var g = NS("g", { transform: "translate(" + margin.left + "," + margin.top + ")" });
+    svg.appendChild(g);
+    var ticks = opts.ticks || 3;
+    for (var i = 0; i <= ticks; i++) {
+      var val = (yMax / ticks) * i;
+      var y = innerH - (val / yMax) * innerH;
+      g.appendChild(NS("line", { class: i === 0 ? "axis-line" : "grid-line", x1: 0, x2: innerW, y1: y, y2: y }));
+      var t = NS("text", { x: -6, y: y + 3, "text-anchor": "end" });
+      t.textContent = opts.yFormat ? opts.yFormat(val) : fmt(val, 1);
+      g.appendChild(t);
+    }
+    var groupW = innerW / categories.length, nSeries = series.length, barGap = 2, groupPad = groupW * 0.16;
+    var barW = Math.min(26, (groupW - groupPad * 2 - barGap * (nSeries - 1)) / nSeries);
+    var setW = barW * nSeries + barGap * (nSeries - 1);
+    categories.forEach(function (cat, ci) {
+      var groupX = ci * groupW + (groupW - setW) / 2;
+      var xt = NS("text", { x: ci * groupW + groupW / 2, y: innerH + 16, "text-anchor": "middle" });
+      xt.textContent = cat; g.appendChild(xt);
+      series.forEach(function (s, si) {
+        var v = s.values[ci], barH = (v / yMax) * innerH;
+        var x = groupX + si * (barW + barGap), y = innerH - barH;
+        g.appendChild(NS("rect", { class: "bar", x: x, y: y, width: barW, height: Math.max(barH, 1), rx: 3, ry: 3, fill: s.color }));
+      });
+    });
+    container.appendChild(svg);
+  }
+
+  function drawLine(containerId, opts) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    var W = 380, H = 210;
+    var margin = { top: 8, right: 10, bottom: 26, left: 32 };
+    var innerW = W - margin.left - margin.right, innerH = H - margin.top - margin.bottom;
+    var categories = opts.categories, series = opts.series;
+    var maxVal = 0;
+    series.forEach(function (s) { s.values.forEach(function (v) { if (v > maxVal) maxVal = v; }); });
+    var yMax = niceMax(maxVal * 1.2);
+    var svg = NS("svg", { class: "chart", width: W, height: H, viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "xMidYMid meet" });
+    var g = NS("g", { transform: "translate(" + margin.left + "," + margin.top + ")" });
+    svg.appendChild(g);
+    var ticks = 3;
+    for (var i = 0; i <= ticks; i++) {
+      var val = (yMax / ticks) * i, y = innerH - (val / yMax) * innerH;
+      g.appendChild(NS("line", { class: i === 0 ? "axis-line" : "grid-line", x1: 0, x2: innerW, y1: y, y2: y }));
+      var t = NS("text", { x: -6, y: y + 3, "text-anchor": "end" });
+      t.textContent = fmt(val, 1); g.appendChild(t);
+    }
+    var stepX = innerW / (categories.length - 1);
+    categories.forEach(function (cat, ci) {
+      var xt = NS("text", { x: ci * stepX, y: innerH + 16, "text-anchor": ci === 0 ? "start" : (ci === categories.length - 1 ? "end" : "middle") });
+      xt.textContent = cat; g.appendChild(xt);
+    });
+    series.forEach(function (s) {
+      var pts = s.values.map(function (v, i) { return [i * stepX, innerH - (v / yMax) * innerH]; });
+      var d = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+      g.appendChild(NS("path", { class: "line-path", d: d, stroke: s.color }));
+      pts.forEach(function (p) { g.appendChild(NS("circle", { class: "dot-mark", cx: p[0], cy: p[1], r: 3.5, fill: s.color })); });
+    });
+    container.appendChild(svg);
+  }
+
+  function legendHTML(items) {
+    return items.map(function (it) {
+      return '<span class="sw"><span class="dot" style="background:' + it.color + '"></span>' + it.label + '</span>';
+    }).join("");
+  }
+
+  // ===== Step / frame definitions =====
+  var buckets1 = ["1st", "2nd", "3rd", "4th", "5th", "6-10", "11-20", "21+"];
+  var fbEng1 = [2.19, 1.77, 1.56, 1.63, 1.72, 1.73, 1.69, 1.17];
+  var igEng1 = [3.82, 2.88, 3.49, 2.08, 2.35, 2.48, 1.55, 1.15];
+
+  var declineCats = ["Facebook", "Instagram"];
+  var declinePct = [50.0, 48.9];
+
+  var modeAvgManual = [3.58, 3.23, 3.24, 2.64, 3.16, 5.36, 3.64, 2.32];
+  var modeAvgAuto = [2.10, 1.93, 2.35, 1.70, 1.86, 1.77, 1.48, 1.11];
+
+  var decayBuckets = ["0d", "1-3d", "4-7d", "8-14d", "15-30d", "31d+"];
+  var decayManual = [3.77, 3.01, 2.81, 3.16, 3.15, 3.95];
+  var decayAuto = [1.30, 1.45, 1.27, 1.39, 1.27, 2.20];
+
+  var repeatBuckets = ["1st", "2nd", "3rd", "4th+"];
+  var fbEng5 = [1.08, 1.16, 0.94, 0.63];
+  var igEng5 = [1.71, 1.82, 1.28, 0.61];
+
+  var formatCats = ["Photo", "Video"];
+  var fbEng6 = [1.39, 1.15];
+  var igEng6 = [1.56, 2.65];
+
+  var frames = [
+    {
+      kicker: "01 · Retailer order",
+      title: "Avg. engagement, pooled across all content",
+      legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
+      draw: function (id) {
+        drawLine(id, { categories: buckets1, series: [
+          { label: "Facebook", color: TEAL, values: fbEng1 },
+          { label: "Instagram", color: PINK, values: igEng1 }
+        ]});
+      }
+    },
+    {
+      kicker: "02 · Per-content decline test",
+      title: "% of content with a declining slope",
+      legend: [],
+      draw: function (id) {
+        drawBar(id, { categories: declineCats, yMax: 100, ticks: 4,
+          series: [{ label: "% declining", color: TEAL, values: declinePct }],
+          yFormat: function (v) { return fmt(v, 0) + "%"; }
+        });
+      }
+    },
+    {
+      kicker: "03 · Same test, restated",
+      title: "% of content with a declining slope",
+      legend: [],
+      draw: function (id) {
+        drawBar(id, { categories: declineCats, yMax: 100, ticks: 4,
+          series: [{ label: "% declining", color: TEAL, values: declinePct }],
+          yFormat: function (v) { return fmt(v, 0) + "%"; }
+        });
+      }
+    },
+    {
+      kicker: "04 · Manual vs. auto-share",
+      title: "Avg. engagement by retailer order",
+      legend: [{ label: "Manual", color: TEAL }, { label: "Auto-share", color: PINK }],
+      draw: function (id) {
+        drawLine(id, { categories: buckets1, series: [
+          { label: "Manual", color: TEAL, values: modeAvgManual },
+          { label: "Auto-share", color: PINK, values: modeAvgAuto }
+        ]});
+      }
+    },
+    {
+      kicker: "05 · Time-based decay",
+      title: "Avg. engagement by days since first post",
+      legend: [{ label: "Manual", color: TEAL }, { label: "Auto-share", color: PINK }],
+      draw: function (id) {
+        drawLine(id, { categories: decayBuckets, series: [
+          { label: "Manual", color: TEAL, values: decayManual },
+          { label: "Auto-share", color: PINK, values: decayAuto }
+        ]});
+      }
+    },
+    {
+      kicker: "06 · Same-retailer repeats",
+      title: "Avg. engagement by own repost number",
+      legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
+      draw: function (id) {
+        drawBar(id, { categories: repeatBuckets, series: [
+          { label: "Facebook", color: TEAL, values: fbEng5 },
+          { label: "Instagram", color: PINK, values: igEng5 }
+        ]});
+      }
+    },
+    {
+      kicker: "07 · Content format",
+      title: "Avg. engagement, photo vs. video",
+      legend: [{ label: "Facebook", color: TEAL }, { label: "Instagram", color: PINK }],
+      draw: function (id) {
+        drawBar(id, { categories: formatCats, series: [
+          { label: "Facebook", color: TEAL, values: fbEng6 },
+          { label: "Instagram", color: PINK, values: igEng6 }
+        ]});
+      }
+    }
+  ];
+
+  // Build sticky frames
+  var frameStack = document.getElementById("frame-stack");
+  frames.forEach(function (f, i) {
+    var div = document.createElement("div");
+    div.className = "frame" + (i === 0 ? " active" : "");
+    div.id = "frame-" + i;
+    div.innerHTML =
+      '<div class="frame-kicker">' + f.kicker + '</div>' +
+      '<div class="frame-title">' + f.title + '</div>' +
+      '<div class="frame-chart" id="frame-chart-' + i + '"></div>' +
+      (f.legend.length ? '<div class="frame-legend">' + legendHTML(f.legend) + '</div>' : '');
+    frameStack.appendChild(div);
+  });
+
+  // Build mobile inline charts (mirrors each step)
+  frames.forEach(function (f, i) {
+    var mount = document.getElementById("mchart-" + i);
+    if (!mount) return;
+    mount.innerHTML =
+      '<div class="frame-kicker">' + f.kicker + '</div>' +
+      '<div class="frame-title">' + f.title + '</div>' +
+      '<div class="frame-chart" id="mobile-chart-' + i + '" style="height:200px;"></div>' +
+      (f.legend.length ? '<div class="frame-legend">' + legendHTML(f.legend) + '</div>' : '');
+  });
+
+  // Draw all charts once (desktop + mobile mounts)
+  function drawAll() {
+    frames.forEach(function (f, i) {
+      f.draw("frame-chart-" + i);
+      f.draw("mobile-chart-" + i);
+    });
+  }
+  drawAll();
+
+  // Dot rail
+  var dotRail = document.getElementById("dot-rail");
+  frames.forEach(function (f, i) {
+    var d = document.createElement("div");
+    d.className = "dot" + (i === 0 ? " active" : "");
+    d.dataset.step = i;
+    dotRail.appendChild(d);
+  });
+
+  function setActiveFrame(idx) {
+    for (var i = 0; i < frames.length; i++) {
+      var fr = document.getElementById("frame-" + i);
+      if (fr) fr.classList.toggle("active", i === idx);
+    }
+    var dots = dotRail.querySelectorAll(".dot");
+    dots.forEach(function (d, i) { d.classList.toggle("active", i === idx); });
+  }
+
+  // IntersectionObserver on steps
+  var steps = Array.from(document.querySelectorAll(".step"));
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var idx = parseInt(entry.target.dataset.step, 10);
+      entry.target.classList.toggle("in-view", entry.isIntersecting);
+      if (entry.isIntersecting) setActiveFrame(idx);
+    });
+  }, { threshold: 0, rootMargin: "-45% 0px -45% 0px" });
+  steps.forEach(function (s) { io.observe(s); });
+
+  // Progress bar
+  var progressRail = document.getElementById("progress-rail");
+  function onScroll() {
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressRail.style.width = pct + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Hide progress rail + dot rail once the light closer section takes over
+  var dotRailEl = document.getElementById("dot-rail");
+  var closerIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      progressRail.classList.toggle("hidden", entry.isIntersecting);
+      dotRailEl.classList.toggle("hidden", entry.isIntersecting);
+    });
+  }, { threshold: 0.15 });
+  closerIO.observe(document.querySelector(".closer"));
+
+  // Count-up animation for hero + big-stat numbers
+  function countUp(el, target, suffix, duration) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = target + suffix; return;
+    }
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var statNums = document.querySelectorAll(".stat-row .num");
+  var heroTargets = [
+    { text: "1.6M", val: 1.6, suffix: "M" },
+    { text: "47K", val: 47, suffix: "K" },
+    { text: "12", val: 12, suffix: "" }
+  ];
+  var heroObserved = false;
+  var heroIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting && !heroObserved) {
+        heroObserved = true;
+        statNums.forEach(function (el, i) {
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            el.textContent = heroTargets[i].text; return;
+          }
+          var t = heroTargets[i];
+          var start = null, duration = 1200;
+          function step(ts) {
+            if (!start) start = ts;
+            var p = Math.min((ts - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            var v = t.val * eased;
+            el.textContent = (t.suffix === "M" ? v.toFixed(1) : Math.round(v)) + t.suffix;
+            if (p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        });
+      }
+    });
+  }, { threshold: 0.5 });
+  heroIO.observe(document.querySelector(".stat-row"));
+
+})();
+</script>
